@@ -45,19 +45,20 @@ router.post("/users/create", async (req, res) => {
 
 router.post("/users/login", async (req, res) => {
   if (req.body.email && req.body.password) {
-    console.log(req.body.email);
-
     const user = await User.findOne({ email: req.body.email });
 
-    console.log(user.name);
-    const hash = SHA256(req.body.password + user.salt).toString(encBase64);
-    if (hash === user.hash) {
-      res.status(200).json(user);
+    if (user) {
+      const hash = SHA256(req.body.password + user.salt).toString(encBase64);
+      if (hash === user.hash) {
+        res.status(200).json(user);
+      } else {
+        res.status(201).json("wrong password");
+      }
     } else {
-      res.status(400).json({ statut: "wrong password" });
+      res.status(201).json("wrong email");
     }
   } else {
-    res.status(400).json({ statut: "missing email or password" });
+    res.status(201).json("No account found");
   }
 });
 
