@@ -112,8 +112,7 @@ router.post("/affiliates/create", isAuthentificated, async (req, res) => {
 
 // Update Affiliate route
 router.post("/affiliate/update/:id", isAuthentificated, async (req, res) => {
-  const { name, email, website, description, contact, telephone, responsable } =
-    req.body;
+  const { name, email, website, description, contact, telephone } = req.body;
   try {
     if (name && email && website && description && contact && telephone) {
       const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
@@ -145,7 +144,7 @@ router.post("/affiliate/update/:id", isAuthentificated, async (req, res) => {
 });
 
 // Delete Affiliate route
-router.delete("/affiliate/delete/:id", async (req, res) => {
+router.delete("/affiliate/delete/:id", isAuthentificated, async (req, res) => {
   try {
     await Affiliate.findByIdAndDelete(req.params.id);
     res.json({ message: "Affiliate removed" });
