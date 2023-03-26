@@ -9,19 +9,6 @@ app.use(express.json());
 
 mongoose.connect(process.env.DATABASE_URI_ONLINE);
 
-// routes principales
-app.get("/", (req, res) => {
-  res.json({ message: "Hi, welcome to my Affiliate Backend" });
-});
-
-app.get("/hello", (req, res) => {
-  res.json({ message: "Hello" });
-});
-
-app.all("*", function (req, res) {
-  res.json({ message: "Page not found" });
-});
-
 // import des routes
 const usersRoutes = require("./routes/users");
 app.use(usersRoutes);
@@ -29,6 +16,19 @@ app.use(usersRoutes);
 const affiliatesRoutes = require("./routes/affiliates");
 app.use(affiliatesRoutes);
 
-app.listen(process.env.PORT || 3000, () => {
+// routes principales
+// app.get("/", (req, res) => {
+//   res.json({ message: "Hi, welcome to my Affiliate Backend" });
+// });
+
+// app.get("/hello", (req, res) => {
+//   res.json({ message: "Hello" });
+// });
+
+// app.all("*", function (req, res) {
+//   res.json({ message: "Page not found" });
+// });
+
+app.listen(process.env.PORT, () => {
   console.log("Server has started 🥵");
 });
