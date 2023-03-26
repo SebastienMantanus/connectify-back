@@ -79,8 +79,7 @@ router.get("/affiliates-search/", isAuthentificated, async (req, res) => {
 // Create Affiliate route
 router.post("/affiliates/create", isAuthentificated, async (req, res) => {
   //destructuring du req.body
-  const { name, email, website, description, contact, telephone, responsable } =
-    req.body;
+  const { name, email, website, description, contact, telephone } = req.body;
   //ajout à la base de donnée avec sécurités
   if (name && email && website && description && contact && telephone) {
     try {
