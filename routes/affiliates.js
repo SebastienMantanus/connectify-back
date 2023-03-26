@@ -1,7 +1,8 @@
+const cors = require("cors");
 const express = require("express");
 const isAuthentificated = require("../middlewares/isauthentificated");
 const router = express.Router();
-
+router.use(cors());
 // Cloudinary
 const fileUpload = require("express-fileupload");
 const cloudinary = require("cloudinary").v2;
