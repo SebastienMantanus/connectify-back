@@ -186,7 +186,7 @@ router.post(
           { new: true }
         );
         if (affiliateToUpdate) {
-          res.status(200).json({
+          return res.status(200).json({
             message: "Affiliate updated !",
             affiliate: affiliateToUpdate,
           });
@@ -199,4 +199,31 @@ router.post(
     }
   }
 );
+
+// Add Favicon to Cloudinary
+
+router.get("/addfavicon/:id", async (req, res) => {
+  try {
+    // On cible le contact
+    const affiliateSearch = await Affiliate.findById(req.params.id);
+    const favicon_url = `https://icon.horse/icon/${affiliateSearch.website}`;
+
+    // on envoie tout ça dans Cloudinary
+    const result = await cloudinary.uploader.upload(favicon_url, {
+      folder: "Connectify",
+    });
+
+    // on met à jour le contact
+    const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
+      req.params.id,
+      {
+        favicon: result,
+      },
+      { new: true }
+    );
+    return res.json("Favicon OK");
+  } catch (error) {
+    res.status(400).json("favicon Upload >> Something is Wrong");
+  }
+});
 module.exports = router;

@@ -18,6 +18,7 @@ const Affiliate = mongoose.model("Affiliate", {
   },
   starred: Boolean,
   avatar: Object,
+  favicon: Object,
 });
 
 module.exports = Affiliate;
