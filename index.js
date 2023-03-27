@@ -21,14 +21,6 @@ app.get("/", (req, res) => {
   res.json({ message: "Hi, welcome to my Affiliate Backend" });
 });
 
-// app.get("/hello", (req, res) => {
-//   res.json({ message: "Hello" });
-// });
-
-// app.all("*", function (req, res) {
-//   res.json({ message: "Page not found" });
-// });
-
 app.listen(process.env.PORT, () => {
-  console.log("Server has started 🥵");
+  console.log("Server has started");
 });
