@@ -1,8 +1,8 @@
-require("dotenv").config();
-const mongoose = require("mongoose");
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
 const app = express();
+require("dotenv").config();
 
 app.use(cors());
 app.use(express.json());
@@ -17,9 +17,9 @@ const affiliatesRoutes = require("./routes/affiliates");
 app.use(affiliatesRoutes);
 
 // routes principales
-// app.get("/", (req, res) => {
-//   res.json({ message: "Hi, welcome to my Affiliate Backend" });
-// });
+app.get("/", (req, res) => {
+  res.json({ message: "Hi, welcome to my Affiliate Backend" });
+});
 
 // app.get("/hello", (req, res) => {
 //   res.json({ message: "Hello" });

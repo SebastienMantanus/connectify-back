@@ -1,8 +1,8 @@
-require("dotenv").config();
-const cors = require("cors");
 const express = require("express");
+require("dotenv").config();
 const isAuthentificated = require("../middlewares/isauthentificated");
 const router = express.Router();
+const cors = require("cors");
 router.use(cors());
 
 // Cloudinary
@@ -155,7 +155,7 @@ router.delete("/affiliate/delete/:id", isAuthentificated, async (req, res) => {
   }
 });
 
-// Adding avatars to Affiliates route
+// Adding avatars to Affiliates route : note used
 // router.post(
 //   "/addimage/:id",
 //   isAuthentificated,
