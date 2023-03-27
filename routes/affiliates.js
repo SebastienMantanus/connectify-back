@@ -1,6 +1,6 @@
-const express = require("express");
 require("dotenv").config();
-const isAuthentificated = require("../middlewares/isauthentificated");
+const express = require("express");
+const isAuthentificated = require("../middlewares/isAuthentificated.js");
 const router = express.Router();
 const cors = require("cors");
 router.use(cors());
@@ -21,17 +21,6 @@ const convertToBase64 = (file) => {
 //import des modèles
 const Affiliate = require("../models/Affiliate");
 const User = require("../models/User");
-
-//routes affiliates (test route, not for use in the app)
-// router.get("/affiliates", isAuthentificated, async (req, res) => {
-//   try {
-//     const showAffiliates = await Affiliate.find().populate("responsable");
-//     console.log(req.user);
-//     res.status(200).json([req.user, showAffiliates]);
-//   } catch (error) {
-//     res.status(400).json("Affiliates listing error : ", error.message);
-//   }
-// });
 
 // ********* MAIN ROUTES FOR AFFILIATES *********
 
@@ -155,52 +144,52 @@ router.delete("/affiliate/delete/:id", isAuthentificated, async (req, res) => {
   }
 });
 
-// Adding avatars to Affiliates route : note used
-// router.post(
-//   "/addimage/:id",
-//   isAuthentificated,
-//   fileUpload(),
-//   async (req, res) => {
-//     if (req.files.picture) {
-//       try {
-//         // search existing avatar from Affiliate
-//         const affiliateToCheck = await Affiliate.findById(req.params.id);
+// Adding avatars to Affiliates route : note used for now
+router.post(
+  "/addimage/:id",
+  isAuthentificated,
+  fileUpload(),
+  async (req, res) => {
+    if (req.files.picture) {
+      try {
+        // search existing avatar from Affiliate
+        const affiliateToCheck = await Affiliate.findById(req.params.id);
 
-//         if (affiliateToCheck.avatar) {
-//           // on remonte l'ID public de l'avatar pour le supprimer
-//           const avatartoDelete = affiliateToCheck.avatar.public_id;
-//           // On supprime l'avatar de Cloudinary
-//           const deleteResponse = await cloudinary.uploader.destroy(
-//             avatartoDelete
-//           );
-//         }
-//         // on remonte le nouvel avatar
-//         const converted = convertToBase64(req.files.picture);
-//         const result = await cloudinary.uploader.upload(converted, {
-//           folder: "Annuaire",
-//         });
-//         const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
-//           req.params.id,
-//           {
-//             avatar: result,
-//             updatadBy: req.user,
-//           },
-//           { new: true }
-//         );
-//         if (affiliateToUpdate) {
-//           return res.status(200).json({
-//             message: "Affiliate updated !",
-//             affiliate: affiliateToUpdate,
-//           });
-//         } else {
-//           res.status(400).json({ message: "Affiliate not found" });
-//         }
-//       } catch (error) {
-//         res.status(400).json("Image Upload >> Something is Wrong");
-//       }
-//     }
-//   }
-// );
+        if (affiliateToCheck.avatar) {
+          // on remonte l'ID public de l'avatar pour le supprimer
+          const avatartoDelete = affiliateToCheck.avatar.public_id;
+          // On supprime l'avatar de Cloudinary
+          const deleteResponse = await cloudinary.uploader.destroy(
+            avatartoDelete
+          );
+        }
+        // on remonte le nouvel avatar
+        const converted = convertToBase64(req.files.picture);
+        const result = await cloudinary.uploader.upload(converted, {
+          folder: "Annuaire",
+        });
+        const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
+          req.params.id,
+          {
+            avatar: result,
+            updatadBy: req.user,
+          },
+          { new: true }
+        );
+        if (affiliateToUpdate) {
+          return res.status(200).json({
+            message: "Affiliate updated !",
+            affiliate: affiliateToUpdate,
+          });
+        } else {
+          res.status(400).json({ message: "Affiliate not found" });
+        }
+      } catch (error) {
+        res.status(400).json("Image Upload >> Something is Wrong");
+      }
+    }
+  }
+);
 
 // Add Favicon to Cloudinary
 
