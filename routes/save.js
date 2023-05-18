@@ -219,7 +219,7 @@ router.get("/addfavicon/:id", async (req, res) => {
   }
 });
 
-//Affiliate create by owner name
+//Affiliate create by SIREN number
 
 router.get("/autocreate", async (req, res) => {
   try {
@@ -227,54 +227,55 @@ router.get("/autocreate", async (req, res) => {
       `https://api.pappers.fr/v2/recherche-dirigeants?api_token=${process.env.PAPPERS_API_KEY}&q=${req.query.q}&code_postal=${req.query.zip}&entreprise_cessee=false`
     );
 
+    console.log(response.data);
+
     if (response.data.total > 0) {
       //Build the return object
 
-      let managerData = [];
+      if (response.data.resultats[0].nb_entreprises_total > 0) {
+        let managerData = {
+          name: response.data.resultats[0].nom_complet,
+          age: response.data.resultats[0].age,
+          address: `${
+            response.data.resultats[0].adresse_ligne_1
+              ? response.data.resultats[0].adresse_ligne_1
+              : response.data.resultats[0].adresse_ligne_2
+          } ${response.data.resultats[0].code_postal} ${
+            response.data.resultats[0].ville
+          } `,
+          nb_companies: response.data.resultats[0].nb_entreprises_total,
+          companies: [],
+        };
 
-      //build convinient companies array
-
-      for (let i = 0; i < response.data.resultats.length; i++) {
-        let companies_array = [];
+        //add companies to the return object
         for (
-          let j = 0;
-          j < response.data.resultats[i].entreprises.length;
-          j++
+          let i = 0;
+          i < response.data.resultats[0].entreprises.length;
+          i++
         ) {
-          if (
-            response.data.resultats[i].entreprises[j].entreprise_cessee === 0
-          ) {
-            companies_array.push({
+          if (!response.data.resultats[0].entreprises[i].date_cessation) {
+            managerData.companies.push({
               company_name:
-                response.data.resultats[i].entreprises[j].denomination,
+                response.data.resultats[0].entreprises[i].nom_entreprise,
+              siren: response.data.resultats[0].entreprises[i].siren,
+              company_address: `${response.data.resultats[0].entreprises[i].siege.adresse_ligne_1} ${response.data.resultats[0].entreprises[i].siege.code_postal} ${response.data.resultats[0].entreprises[i].siege.ville}`,
               legal_status:
-                response.data.resultats[i].entreprises[j].forme_juridique,
-              company_registration:
-                response.data.resultats[i].entreprises[j].date_creation_formate,
-              company_activity:
-                response.data.resultats[i].entreprises[j].libelle_code_naf,
-              company_address: `${response.data.resultats[i].entreprises[j].siege.adresse_ligne_1} ${response.data.resultats[i].entreprises[j].siege.code_postal} ${response.data.resultats[i].entreprises[j].siege.ville}`,
-              company_size: response.data.resultats[i].entreprises[j].effectif,
-              company_capital: `${response.data.resultats[i].entreprises[j].capital} €`,
-              company_siren: response.data.resultats[i].entreprises[j].siren,
+                response.data.resultats[0].entreprises[i].forme_juridique,
+              capital: response.data.resultats[0].entreprises[i].capital,
+              employees: response.data.resultats[0].entreprises[i].effectif,
+              activity:
+                response.data.resultats[0].entreprises[i].libelle_code_naf,
+              registration_date:
+                response.data.resultats[0].entreprises[i].date_creation_formate,
             });
           }
         }
 
-        //push in to the result array
-        managerData.push({
-          name: response.data.resultats[i].nom_complet,
-          age: response.data.resultats[i].age,
-          zip_code: response.data.resultats[i].code_postal,
-          nb_companies: companies_array.length,
-          companies: companies_array,
-        });
+        res.status(200).json(managerData);
       }
-
-      //result array return
-      res.status(200).json(managerData);
     } else {
-      res.status(201).json({ result: "no contact found !" });
+      console.log("Aucune entreprise associée à ce contact");
+      res.status(201).json({ result: "no company found" });
     }
   } catch (error) {
     res.status(400).json("Affiliate auto-creation error");

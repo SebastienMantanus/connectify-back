@@ -5,6 +5,7 @@ const Affiliate = mongoose.model("Affiliate", {
   name: String,
   email: String,
   website: String,
+  sirene: Number,
   description: String,
   contact: String,
   telephone: String,

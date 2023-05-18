@@ -18,7 +18,7 @@ app.use(affiliatesRoutes);
 
 // routes principales
 app.get("/", (req, res) => {
-  res.status(200).json({ message: "Hi, welcome to my Affiliate Backend" });
+  res.status(200).json({ message: "Hi, welcome to Connectify Backend" });
 });
 
 app.listen(process.env.PORT, () => {
