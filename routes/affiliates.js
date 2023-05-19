@@ -73,6 +73,7 @@ router.get("/affiliates-search/", isAuthentificated, async (req, res) => {
 router.post("/affiliates/create", isAuthentificated, async (req, res) => {
   //destructuring du req.body
   const { name, email, website, description, contact, telephone } = req.body;
+
   //ajout à la base de donnée avec sécurités
   if (name && email && website && description && contact && telephone) {
     try {
@@ -219,9 +220,11 @@ router.get("/addfavicon/:id", async (req, res) => {
   }
 });
 
-//Affiliate create by owner name
+// ****** NEW ROUTES *******
 
-router.get("/autocreate", async (req, res) => {
+//Nex contact search by owner name
+
+router.get("/autocreate/byname", async (req, res) => {
   try {
     const response = await axios.get(
       `https://api.pappers.fr/v2/recherche-dirigeants?api_token=${process.env.PAPPERS_API_KEY}&q=${req.query.q}&code_postal=${req.query.zip}&entreprise_cessee=false`
@@ -235,7 +238,7 @@ router.get("/autocreate", async (req, res) => {
       //build convinient companies array
 
       for (let i = 0; i < response.data.resultats.length; i++) {
-        let companies_array = [];
+        // let companies_array = [];
         for (
           let j = 0;
           j < response.data.resultats[i].entreprises.length;
@@ -244,7 +247,9 @@ router.get("/autocreate", async (req, res) => {
           if (
             response.data.resultats[i].entreprises[j].entreprise_cessee === 0
           ) {
-            companies_array.push({
+            managerData.push({
+              manager_name: response.data.resultats[i].nom_complet,
+              manager_role: response.data.resultats[i].qualite,
               company_name:
                 response.data.resultats[i].entreprises[j].denomination,
               legal_status:
@@ -260,25 +265,29 @@ router.get("/autocreate", async (req, res) => {
             });
           }
         }
-
-        //push in to the result array
-        managerData.push({
-          name: response.data.resultats[i].nom_complet,
-          age: response.data.resultats[i].age,
-          zip_code: response.data.resultats[i].code_postal,
-          nb_companies: companies_array.length,
-          companies: companies_array,
-        });
       }
 
       //result array return
       res.status(200).json(managerData);
     } else {
-      res.status(201).json({ result: "no contact found !" });
+      res.status(201).json([]);
     }
   } catch (error) {
-    res.status(400).json("Affiliate auto-creation error");
+    res.status(400).json(error);
   }
 });
 
+router.get("/autocreate/bycompany", async (req, res) => {
+  try {
+    const response = await axios.get(
+      `https://suggestions.pappers.fr/v2?q=googl`
+    );
+
+    console.log(response);
+
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(400).json(error);
+  }
+});
 module.exports = router;
