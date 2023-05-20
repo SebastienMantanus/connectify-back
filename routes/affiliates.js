@@ -277,17 +277,65 @@ router.get("/autocreate/byname", async (req, res) => {
   }
 });
 
-router.get("/autocreate/bycompany", async (req, res) => {
-  try {
-    const response = await axios.get(
-      `https://suggestions.pappers.fr/v2?q=googl`
-    );
+// Autocomplete company
 
-    console.log(response);
+router.get("/autocreate/autocomplete", async (req, res) => {
+  if (req.query.url && req.query.q) {
+    try {
+      const response = await axios.get(
+        `https://suggestions.pappers.fr/v2?q=${req.query.q}&longueur=20&cibles=denomination`
+      );
 
-    res.status(200).json(response);
-  } catch (error) {
-    res.status(400).json(error);
+      const autocomplete_arr = [];
+
+      if (response.data.resultats_denomination.length > 0) {
+        for (let i = 0; i < response.data.resultats_denomination.length; i++) {
+          if (response.data.resultats_denomination[i].date_cessation === null) {
+            autocomplete_arr.push({
+              company_name:
+                response.data.resultats_denomination[i].denomination,
+              company_legalform:
+                response.data.resultats_denomination[i].forme_juridique,
+              company_address:
+                response.data.resultats_denomination[i].siege.adresse_ligne_1,
+              company_zip:
+                response.data.resultats_denomination[i].siege.code_postal,
+              company_city: response.data.resultats_denomination[i].siege.ville,
+              company_size_min:
+                response.data.resultats_denomination[i].effectif_min,
+              company_size_max:
+                response.data.resultats_denomination[i].effectif_max,
+              company_capital: response.data.resultats_denomination[i].capital,
+              company_founded:
+                response.data.resultats_denomination[i].date_creation_formate,
+              company_registration_number:
+                response.data.resultats_denomination[i].siren,
+              company_website: req.query.url,
+            });
+          }
+        }
+      }
+      res.status(200).json(autocomplete_arr);
+    } catch (error) {
+      res.status(400).json({ request_fail: error.data });
+    }
+  } else {
+    res.status(400).json("missing request elements");
   }
 });
+
+// Administrator research by company registration number
+
+router.get("/autocreate/peoplesearch", async (req, res) => {
+  if (req.query.siren) {
+    const response = await axios.get(
+      `https://api.pappers.fr/v2/recherche-beneficiaires?api_token=${process.env.PAPPERS_API_KEY}&siren=${req.query.siren}`
+    );
+
+    res.status(200).json(response.data);
+  } else {
+    res.status(400).json("mission siren number");
+  }
+});
+
 module.exports = router;
