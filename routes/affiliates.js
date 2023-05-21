@@ -23,7 +23,7 @@ const convertToBase64 = (file) => {
 const Affiliate = require("../models/Affiliate");
 const User = require("../models/User");
 
-// ********* MAIN ROUTES FOR AFFILIATES *********
+// ********* MAIN ROUTES FOR AFFILIATES V1 *********
 
 // Affiliate detail by ID
 router.get("/affiliates/:id", isAuthentificated, async (req, res) => {
@@ -222,65 +222,10 @@ router.get("/addfavicon/:id", async (req, res) => {
 
 // ****** NEW ROUTES *******
 
-//Nex contact search by owner name
-
-router.get("/autocreate/byname", async (req, res) => {
-  try {
-    const response = await axios.get(
-      `https://api.pappers.fr/v2/recherche-dirigeants?api_token=${process.env.PAPPERS_API_KEY}&q=${req.query.q}&code_postal=${req.query.zip}&entreprise_cessee=false`
-    );
-
-    if (response.data.total > 0) {
-      //Build the return object
-
-      let managerData = [];
-
-      //build convinient companies array
-
-      for (let i = 0; i < response.data.resultats.length; i++) {
-        // let companies_array = [];
-        for (
-          let j = 0;
-          j < response.data.resultats[i].entreprises.length;
-          j++
-        ) {
-          if (
-            response.data.resultats[i].entreprises[j].entreprise_cessee === 0
-          ) {
-            managerData.push({
-              manager_name: response.data.resultats[i].nom_complet,
-              manager_role: response.data.resultats[i].qualite,
-              company_name:
-                response.data.resultats[i].entreprises[j].denomination,
-              legal_status:
-                response.data.resultats[i].entreprises[j].forme_juridique,
-              company_registration:
-                response.data.resultats[i].entreprises[j].date_creation_formate,
-              company_activity:
-                response.data.resultats[i].entreprises[j].libelle_code_naf,
-              company_address: `${response.data.resultats[i].entreprises[j].siege.adresse_ligne_1} ${response.data.resultats[i].entreprises[j].siege.code_postal} ${response.data.resultats[i].entreprises[j].siege.ville}`,
-              company_size: response.data.resultats[i].entreprises[j].effectif,
-              company_capital: `${response.data.resultats[i].entreprises[j].capital} €`,
-              company_siren: response.data.resultats[i].entreprises[j].siren,
-            });
-          }
-        }
-      }
-
-      //result array return
-      res.status(200).json(managerData);
-    } else {
-      res.status(201).json([]);
-    }
-  } catch (error) {
-    res.status(400).json(error);
-  }
-});
-
 // Autocomplete company
 
 router.get("/autocreate/autocomplete", async (req, res) => {
-  if (req.query.url && req.query.q) {
+  if (req.query.q) {
     try {
       const response = await axios.get(
         `https://suggestions.pappers.fr/v2?q=${req.query.q}&longueur=20&cibles=denomination`
@@ -306,11 +251,12 @@ router.get("/autocreate/autocomplete", async (req, res) => {
               company_size_max:
                 response.data.resultats_denomination[i].effectif_max,
               company_capital: response.data.resultats_denomination[i].capital,
+              company_activity:
+                response.data.resultats_denomination[i].domaine_activite,
               company_founded:
                 response.data.resultats_denomination[i].date_creation_formate,
               company_registration_number:
                 response.data.resultats_denomination[i].siren,
-              company_website: req.query.url,
             });
           }
         }
@@ -320,22 +266,82 @@ router.get("/autocreate/autocomplete", async (req, res) => {
       res.status(400).json({ request_fail: error.data });
     }
   } else {
-    res.status(400).json("missing request elements");
+    res.status(400).json({ error: error.message });
   }
 });
 
-// Administrator research by company registration number
+// Create new contact V2
 
-router.get("/autocreate/peoplesearch", async (req, res) => {
-  if (req.query.siren) {
-    const response = await axios.get(
-      `https://api.pappers.fr/v2/recherche-beneficiaires?api_token=${process.env.PAPPERS_API_KEY}&siren=${req.query.siren}`
-    );
+router.post(
+  "/autocreate/contactcreate",
+  isAuthentificated,
+  async (req, res) => {
+    console.log("welcome to the creation route");
 
-    res.status(200).json(response.data);
-  } else {
-    res.status(400).json("mission siren number");
+    // step 1 : destructuring body
+    const {
+      contact_name,
+      contact_role,
+      contact_email,
+      contact_phone,
+      company_name,
+      company_legalform,
+      company_address,
+      company_zip,
+      company_city,
+      company_size_min,
+      company_size_max,
+      company_capital,
+      company_activity,
+      company_founded,
+      company_registration_number,
+      company_website,
+    } = req.body;
+
+    // step 2 : search favicon and upload to cloudinary
+
+    let company_favicon = {};
+    try {
+      const favicon_url = `https://icon.horse/icon/${company_website}`;
+      const result = await cloudinary.uploader.upload(favicon_url, {
+        folder: "Connectify_V2",
+      });
+
+      company_favicon = { id: result.public_id, url: result.secure_url };
+    } catch (error) {
+      console.log("Cloudinary error : ", error.message);
+    }
+
+    // step 3 : create contact in database
+
+    try {
+      const newAffiliate = new Affiliate({
+        contact_name,
+        contact_role,
+        contact_email,
+        contact_phone,
+        company_name,
+        company_legalform,
+        company_address,
+        company_zip,
+        company_city,
+        company_size_min,
+        company_size_max,
+        company_capital,
+        company_activity,
+        company_founded,
+        company_registration_number,
+        company_website,
+        company_favicon,
+        responsable: req.user,
+      });
+
+      await newAffiliate.save();
+      res.status(200).json(newAffiliate);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
   }
-});
+);
 
 module.exports = router;

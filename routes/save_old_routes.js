@@ -20,8 +20,8 @@ const convertToBase64 = (file) => {
 };
 
 //import des modèles
-const Affiliate = require("../models/Affiliate");
-const User = require("../models/User");
+const Affiliate = require("../models/Affiliate.js");
+const User = require("../models/User.js");
 
 // ********* MAIN ROUTES FOR AFFILIATES *********
 
@@ -282,4 +282,87 @@ router.get("/autocreate", async (req, res) => {
   }
 });
 
+//Nex contact search by owner name
+
+router.get("/autocreate/byname", async (req, res) => {
+  try {
+    const response = await axios.get(
+      `https://api.pappers.fr/v2/recherche-dirigeants?api_token=${process.env.PAPPERS_API_KEY}&q=${req.query.q}&code_postal=${req.query.zip}&entreprise_cessee=false`
+    );
+
+    if (response.data.total > 0) {
+      //Build the return object
+
+      let managerData = [];
+
+      //build convinient companies array
+
+      for (let i = 0; i < response.data.resultats.length; i++) {
+        // let companies_array = [];
+        for (
+          let j = 0;
+          j < response.data.resultats[i].entreprises.length;
+          j++
+        ) {
+          if (
+            response.data.resultats[i].entreprises[j].entreprise_cessee === 0
+          ) {
+            managerData.push({
+              manager_name: response.data.resultats[i].nom_complet,
+              manager_role: response.data.resultats[i].qualite,
+              company_name:
+                response.data.resultats[i].entreprises[j].denomination,
+              legal_status:
+                response.data.resultats[i].entreprises[j].forme_juridique,
+              company_registration:
+                response.data.resultats[i].entreprises[j].date_creation_formate,
+              company_activity:
+                response.data.resultats[i].entreprises[j].libelle_code_naf,
+              company_address: `${response.data.resultats[i].entreprises[j].siege.adresse_ligne_1} ${response.data.resultats[i].entreprises[j].siege.code_postal} ${response.data.resultats[i].entreprises[j].siege.ville}`,
+              company_size: response.data.resultats[i].entreprises[j].effectif,
+              company_capital: `${response.data.resultats[i].entreprises[j].capital} €`,
+              company_siren: response.data.resultats[i].entreprises[j].siren,
+            });
+          }
+        }
+      }
+
+      //result array return
+      res.status(200).json(managerData);
+    } else {
+      res.status(201).json([]);
+    }
+  } catch (error) {
+    res.status(400).json(error);
+  }
+});
+
 module.exports = router;
+
+//MODELS
+
+const mongoose = require("mongoose");
+const User = require("./User");
+
+const Affiliate = mongoose.model("Affiliate", {
+  name: String,
+  email: String,
+  website: String,
+  sirene: Number,
+  description: String,
+  contact: String,
+  telephone: String,
+  responsable: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+  updatadBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+  starred: Boolean,
+  avatar: Object,
+  favicon: Object,
+});
+
+module.exports = Affiliate;
