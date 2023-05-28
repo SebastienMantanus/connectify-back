@@ -28,7 +28,7 @@ const shema = mongoose.Schema(
     contact_folder: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Folder",
-      default: "64731d1f6c2eabd82ffd7aa2",
+      default: "647377874977d0f948b08d71",
     },
 
     responsable: {

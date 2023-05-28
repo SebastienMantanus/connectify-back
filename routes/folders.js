@@ -9,10 +9,11 @@ router.use(cors());
 // import models
 const User = require("../models/User.js");
 const Folder = require("../models/Folder.js");
+const Affiliate = require("../models/Affiliate.js");
 
 // *** FOLDER ROUTES ***
 
-// Folders creation
+// Folders creation route
 
 router.post("/folder/create", isAuthentificated, async (req, res) => {
   try {
@@ -28,7 +29,7 @@ router.post("/folder/create", isAuthentificated, async (req, res) => {
   }
 });
 
-// Folders list
+// Folders list route
 
 router.get("/folders", isAuthentificated, async (req, res) => {
   try {
@@ -39,11 +40,12 @@ router.get("/folders", isAuthentificated, async (req, res) => {
   }
 });
 
-// Folders update
+// Folders update route
 
-router.post("/folder/update/:id", isAuthentificated, async (req, res) => {
+router.patch("/folder/:id", isAuthentificated, async (req, res) => {
   try {
     const folderToUpdate = await Folder.findById(req.params.id);
+    console.log(folderToUpdate);
     if (folderToUpdate) {
       folderToUpdate.name = req.body.name;
       folderToUpdate.description = req.body.description;
@@ -57,23 +59,44 @@ router.post("/folder/update/:id", isAuthentificated, async (req, res) => {
   }
 });
 
-// Folders delete
+// Folders delete route
 
-router.post("/folder/delete/:id", isAuthentificated, async (req, res) => {
-  try {
-    const folderToDelete = await Folder.findById(req.params.id);
-    if (folderToDelete) {
-      await folderToDelete.remove();
-      res.json({ message: "Folder deleted" });
-    } else {
-      res.status(400).json({ message: "Folder not found" });
+router.delete("/folder/:id", isAuthentificated, async (req, res) => {
+  // check if folder contains affiliates
+
+  const affiliates = await Affiliate.find({
+    contact_folder: req.params.id,
+  });
+
+  // if yes, change eatch affiliate folder to default folder
+
+  if (affiliates.length > 0) {
+    affiliates.map(async (affiliate) => {
+      affiliate.contact_folder = "647377874977d0f948b08d71";
+      await affiliate.save();
+    });
+  }
+
+  // check if the folder is not the default folder before deleting
+
+  if (req.params.id === "647377874977d0f948b08d71") {
+    res.status(400).json({ message: "You can't delete this folder" });
+  } else {
+    try {
+      const folderToDelete = await Folder.findById(req.params.id);
+      if (folderToDelete) {
+        await Folder.findByIdAndDelete(req.params.id);
+        res.json({ message: "Folder deleted" });
+      } else {
+        res.status(400).json({ message: "Folder not found" });
+      }
+    } catch (error) {
+      res.status(400).json({ message: error.message });
     }
-  } catch (error) {
-    res.status(400).json({ message: error.message });
   }
 });
 
-// Folders details
+// Folders details route
 
 router.get("/folder/:id", isAuthentificated, async (req, res) => {
   try {
