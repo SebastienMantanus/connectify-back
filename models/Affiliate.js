@@ -1,41 +1,39 @@
 const mongoose = require("mongoose");
 const User = require("./User");
 
-const Affiliate = mongoose.model("Affiliate", {
-  company_name: String,
-  company_legalform: String,
-  company_address: String,
-  company_zip: String,
-  company_city: String,
-  company_size_min: Number,
-  company_size_max: Number,
-  company_capital: Number,
-  company_activity: String,
-  company_founded: String,
-  company_registration_number: Number,
-  company_website: String,
-  company_favicon: Object,
+const shema = mongoose.Schema(
+  {
+    company_name: { type: String, required: true },
+    company_legalform: { type: String, default: "Non renseigné" },
+    company_address: { type: String, default: "Non renseigné" },
+    company_zip: { type: Number, default: 0 },
+    company_city: { type: String, default: "Non renseigné" },
+    company_size_min: { type: Number, default: 0 },
+    company_size_max: { type: Number, default: 0 },
+    company_capital: { type: Number, default: 0 },
+    company_activity: { type: String, default: "Non renseigné" },
+    company_founded: { type: String, default: "Non renseigné" },
+    company_registration_number: { type: Number, default: 0 },
+    company_website: { type: String, required: true },
+    company_favicon: Object,
 
-  contact_name: String,
-  contact_role: String,
-  contact_email: String,
-  contact_phone: String,
+    contact_name: { type: String, required: true },
+    contact_role: { type: String, default: "Non renseigné" },
+    contact_email: { type: String, required: true },
+    contact_phone: { type: Number, default: 0 },
 
-  // app fields
-  responsable: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    responsable: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    updatadBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
+  { timestamp: true }
+);
 
-  updatadBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
-
-  // Old fields (not used in V2)
-  starred: Boolean,
-  avatar: Object,
-  favicon: Object,
-});
-
+const Affiliate = mongoose.model("Affiliate", shema);
 module.exports = Affiliate;
