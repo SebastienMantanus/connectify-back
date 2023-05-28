@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const User = require("./User");
+const Folder = require("./Folder");
 
 const shema = mongoose.Schema(
   {
@@ -21,6 +22,14 @@ const shema = mongoose.Schema(
     contact_role: { type: String, default: "Non renseigné" },
     contact_email: { type: String, required: true },
     contact_phone: { type: Number, default: 0 },
+
+    contact_heat: { type: Number, default: 0 },
+    contact_status: { type: String, default: "Nouveau" },
+    contact_folder: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Folder",
+      default: "64731d1f6c2eabd82ffd7aa2",
+    },
 
     responsable: {
       type: mongoose.Schema.Types.ObjectId,
