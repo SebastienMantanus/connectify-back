@@ -15,3 +15,5 @@ const shema = mongoose.Schema(
 );
 
 const Folder = mongoose.model("Folder", shema);
+
+module.exports = Folder;
