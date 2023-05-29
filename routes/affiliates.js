@@ -39,7 +39,7 @@ router.get("/affiliates/:id", isAuthentificated, async (req, res) => {
   }
 });
 
-// Affiliate list with filters
+// Affiliate list with filters =>> V1
 router.get("/affiliates-search/", isAuthentificated, async (req, res) => {
   let skip = "";
   if (req.query.skip) {
@@ -64,47 +64,86 @@ router.get("/affiliates-search/", isAuthentificated, async (req, res) => {
   const results = await Affiliate.find(filters)
     .populate("responsable")
     .populate("updatadBy")
+    .populate("contact_folder")
     .skip(skip)
     .limit(limit);
 
   res.status(200).json([req.user, results]);
 });
 
-// Create Affiliate route
-router.post("/affiliates/create", isAuthentificated, async (req, res) => {
-  //destructuring du req.body
-  const { name, email, website, description, contact, telephone } = req.body;
+// Affiliates list filtered responsable is the connected user =>> V2
 
-  //ajout à la base de donnée avec sécurités
-  if (name && email && website && description && contact && telephone) {
-    try {
-      const user = await User.findOne({ name: req.user.name });
-      if (user) {
-        const newAffiliate = new Affiliate({
-          name: name,
-          email: email,
-          website: website,
-          description: description,
-          contact: contact,
-          telephone: telephone,
-          responsable: user,
-        });
-        await newAffiliate.save();
-        res.status(200).json(newAffiliate);
-        console.log("partenaire ajouté");
-      } else {
-        res.status(200).json("nom du responsable de compte non trouvé");
-      }
-    } catch (error) {
-      console.log(error.message);
-      res.status(400).json("Affilate creation >> Something is Wrong");
+router.get("/affiliates", isAuthentificated, async (req, res) => {
+  try {
+    // skip and limit
+    let skip = "";
+    if (req.query.skip) {
+      skip = req.query.skip;
     }
-  } else {
-    res.status(201).json("Ajout à la base impossible, élément manquant");
+    let limit = "";
+    if (req.query.limit) {
+      limit = req.query.limit;
+    }
+
+    // add filters by company_name, contact_email, contact_name, contact_heat, contact_status, contact_folder
+    let filters = {};
+    if (req.query.current_user === "true") {
+      filters.responsable = req.user._id;
+    }
+    if (req.query.contact_name) {
+      filters.contact_name = new RegExp(req.query.contact_name, "i");
+    }
+    if (req.query.contact_email) {
+      filters.contact_email = new RegExp(req.query.contact_email, "i");
+    }
+    if (req.query.company_name) {
+      filters.company_name = new RegExp(req.query.company_name, "i");
+    }
+    if (req.query.contact_folder) {
+      filters.contact_folder = req.query.contact_folder;
+    }
+    if (req.query.contact_status) {
+      filters.contact_status = req.query.contact_status;
+    }
+    if (req.query.contact_heat) {
+      filters.contact_heat = req.query.contact_heat;
+    }
+    console.log(req.user._id);
+    // find affiliates with filters
+    const affiliates = await Affiliate.find(filters)
+      .populate("responsable")
+      .populate("updatadBy")
+      .populate("contact_folder")
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json(affiliates);
+  } catch (error) {
+    res.status(400).json("affiliates error");
   }
 });
 
-// Update Affiliate route
+// change responsable (user) of affiliate
+router.post(
+  "/affiliates/:id/change-responsable",
+  isAuthentificated,
+  async (req, res) => {
+    try {
+      const affiliate = await Affiliate.findById(req.params.id);
+      if (affiliate) {
+        affiliate.responsable = req.body.responsable;
+        await affiliate.save();
+        res.status(200).json(affiliate);
+      } else {
+        res.status(400).json("Affiliate not found");
+      }
+    } catch (error) {
+      res.status(400).json("Affiliate not found");
+    }
+  }
+);
+
+// Update Affiliate route ==> V1
 router.post("/affiliate/update/:id", isAuthentificated, async (req, res) => {
   const { name, email, website, description, contact, telephone } = req.body;
   try {
@@ -141,7 +180,7 @@ router.post("/affiliate/update/:id", isAuthentificated, async (req, res) => {
 router.delete("/affiliate/delete/:id", isAuthentificated, async (req, res) => {
   try {
     await Affiliate.findByIdAndDelete(req.params.id);
-    res.json({ message: "Affiliate removed" });
+    res.json({ message: "Affiliate deleted" });
   } catch (error) {
     res.status(400).json("Affilate delete >> Something is Wrong");
   }
@@ -194,36 +233,9 @@ router.post(
   }
 );
 
-// Add Favicon to Cloudinary
-
-router.get("/addfavicon/:id", async (req, res) => {
-  try {
-    // On cible le contact
-    const affiliateSearch = await Affiliate.findById(req.params.id);
-    const favicon_url = `https://icon.horse/icon/${affiliateSearch.website}`;
-
-    // on envoie tout ça dans Cloudinary
-    const result = await cloudinary.uploader.upload(favicon_url, {
-      folder: "Connectify",
-    });
-
-    // on met à jour le contact
-    const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
-      req.params.id,
-      {
-        favicon: result,
-      },
-      { new: true }
-    );
-    return res.json("Favicon OK");
-  } catch (error) {
-    res.status(400).json("favicon Upload >> Something is Wrong");
-  }
-});
-
 // ****** NEW ROUTES *******
 
-// Autocomplete company
+// Affiliate creation step 1 : Autocomplete company
 
 router.get("/autocreate/autocomplete", async (req, res) => {
   if (req.query.q) {
@@ -271,7 +283,7 @@ router.get("/autocreate/autocomplete", async (req, res) => {
   }
 });
 
-// Create new contact V2
+// Affiliate creation step 2 : form validation and creation
 
 router.post(
   "/autocreate/contactcreate",
