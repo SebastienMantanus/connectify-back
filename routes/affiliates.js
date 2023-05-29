@@ -30,7 +30,8 @@ router.get("/affiliates/:id", isAuthentificated, async (req, res) => {
   try {
     const affiliateSearch = await Affiliate.findById(req.params.id)
       .populate("responsable")
-      .populate("updatadBy");
+      .populate("updatadBy")
+      .populate("contact_folder");
     console.log(affiliateSearch);
     res.status(200).json(affiliateSearch);
   } catch (error) {

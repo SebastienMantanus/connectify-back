@@ -37,8 +37,6 @@ router.get("/folder/add-folder-key", isAuthentificated, async (req, res) => {
     const affiliates = await Affiliate.find();
     // check for each affiliate if the folder key exist
     affiliates.map(async (affiliate) => {
-      console.log(affiliate.responsable);
-
       if (!affiliate.contact_folder) {
         console.log("no folder key");
         // if not, update the affiliate with the default folder key
@@ -46,6 +44,7 @@ router.get("/folder/add-folder-key", isAuthentificated, async (req, res) => {
           affiliate._id,
           {
             contact_folder: "647377874977d0f948b08d71",
+            toto: "toto",
           },
           { new: true }
         );
