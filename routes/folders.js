@@ -7,7 +7,7 @@ const cors = require("cors");
 router.use(cors());
 
 // import models
-const User = require("../models/User.js");
+// const User = require("../models/User.js");
 const Folder = require("../models/Folder.js");
 const Affiliate = require("../models/Affiliate.js");
 
@@ -43,8 +43,7 @@ router.get("/folder/add-folder-key", isAuthentificated, async (req, res) => {
         const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
           affiliate._id,
           {
-            contact_folder: "647377874977d0f948b08d71",
-            toto: "toto",
+            contact_folder: ObjectId(`647377874977d0f948b08d71`),
           },
           { new: true }
         );
@@ -128,9 +127,19 @@ router.delete("/folder/:id", isAuthentificated, async (req, res) => {
 
 router.get("/folder/:id", isAuthentificated, async (req, res) => {
   try {
-    const folder = await Folder.findById(req.params.id);
+    const result = {};
+    // find the folder
+    let folder = await Folder.findById(req.params.id);
     if (folder) {
-      res.json(folder);
+      // find all affiliates in the folder
+      const affiliates = await Affiliate.find({
+        contact_folder: req.params.id,
+      });
+      // add the affiliates to the folder object
+      result.folder = folder;
+      result.affiliates = affiliates;
+
+      res.status(200).json(result);
     } else {
       res.status(400).json({ message: "Folder not found" });
     }
@@ -144,6 +153,7 @@ router.get("/folder/:id", isAuthentificated, async (req, res) => {
 router.patch("/folder/:id/add", isAuthentificated, async (req, res) => {
   try {
     const folder = await Folder.findById(req.params.id);
+
     if (folder) {
       // check if affiliate is already in the folder
       const affiliate = await Affiliate.findById(req.body.affiliate_id);
@@ -170,12 +180,15 @@ router.patch(
   async (req, res) => {
     try {
       const folder = await Folder.findById(req.params.id);
+      console.log(folder);
       if (folder) {
         // check if affiliate is already in the folder
         const AffiliateToChange = await Affiliate.findById(
           req.body.affiliate_id
         );
-        if (AffiliateToChange.contact_folder === req.params.id) {
+        console.log(AffiliateToChange.contact_folder._id);
+        if (AffiliateToChange.contact_folder == req.params.id) {
+          console.log("already in this folder");
           res.status(400).json({ message: "Affiliate already in this folder" });
         } else {
           AffiliateToChange.contact_folder = req.params.id;
