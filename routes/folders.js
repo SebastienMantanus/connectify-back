@@ -29,6 +29,35 @@ router.post("/folder/create", isAuthentificated, async (req, res) => {
   }
 });
 
+// if the affiliate folder key dosen't exist, add it and set it to the default folder
+
+router.get("/folder/add-folder-key", isAuthentificated, async (req, res) => {
+  try {
+    // get all affiliates
+    const affiliates = await Affiliate.find();
+    // check for each affiliate if the folder key exist
+    affiliates.map(async (affiliate) => {
+      console.log(affiliate.responsable);
+
+      if (!affiliate.contact_folder) {
+        console.log("no folder key");
+        // if not, update the affiliate with the default folder key
+        const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
+          affiliate._id,
+          {
+            contact_folder: "647377874977d0f948b08d71",
+          },
+          { new: true }
+        );
+        await affiliateToUpdate.save();
+      }
+    });
+    res.json(affiliates);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // Folders list route
 
 router.get("/folders", isAuthentificated, async (req, res) => {
@@ -110,6 +139,58 @@ router.get("/folder/:id", isAuthentificated, async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
+
+// add affiliate to folder route
+
+router.patch("/folder/:id/add", isAuthentificated, async (req, res) => {
+  try {
+    const folder = await Folder.findById(req.params.id);
+    if (folder) {
+      // check if affiliate is already in the folder
+      const affiliate = await Affiliate.findById(req.body.affiliate_id);
+      if (affiliate.contact_folder === req.params.id) {
+        res.status(400).json({ message: "Affiliate already in this folder" });
+      } else {
+        affiliate.contact_folder = req.params.id;
+        await affiliate.save();
+        res.json(affiliate);
+      }
+    } else {
+      res.status(400).json({ message: "Folder not found" });
+    }
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// change affiliate folder route
+
+router.patch(
+  "/folder/:id/change-folder",
+  isAuthentificated,
+  async (req, res) => {
+    try {
+      const folder = await Folder.findById(req.params.id);
+      if (folder) {
+        // check if affiliate is already in the folder
+        const AffiliateToChange = await Affiliate.findById(
+          req.body.affiliate_id
+        );
+        if (AffiliateToChange.contact_folder === req.params.id) {
+          res.status(400).json({ message: "Affiliate already in this folder" });
+        } else {
+          AffiliateToChange.contact_folder = req.params.id;
+          await AffiliateToChange.save();
+          res.json(AffiliateToChange);
+        }
+      } else {
+        res.status(400).json({ message: "Folder not found" });
+      }
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  }
+);
 
 // export routes
 module.exports = router;
