@@ -144,7 +144,7 @@ router.post(
 );
 
 // Update Affiliate route ==> V1
-router.post("/affiliate/update/:id", isAuthentificated, async (req, res) => {
+router.post("/affiliate/updatev1/:id", isAuthentificated, async (req, res) => {
   const { name, email, website, description, contact, telephone } = req.body;
   try {
     if (name && email && website && description && contact && telephone) {
@@ -183,6 +183,30 @@ router.delete("/affiliate/delete/:id", isAuthentificated, async (req, res) => {
     res.json({ message: "Affiliate deleted" });
   } catch (error) {
     res.status(400).json("Affilate delete >> Something is Wrong");
+  }
+});
+
+// Update an Affiliate route ==> V2
+router.post("/affiliate/update/:id", isAuthentificated, async (req, res) => {
+  console.log(req.body);
+  try {
+    const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...req.body,
+
+        updatadBy: req.user,
+      },
+      { new: true }
+    );
+    await affiliateToUpdate.save();
+    res.status(200).json({
+      message: "Affiliate updated !",
+      affiliate: affiliateToUpdate,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json("Affilate update >> Something is Wrong");
   }
 });
 
