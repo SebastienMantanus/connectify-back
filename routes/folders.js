@@ -60,7 +60,7 @@ router.get("/folder/add-folder-key", isAuthentificated, async (req, res) => {
 
 router.get("/folders", isAuthentificated, async (req, res) => {
   try {
-    const folders = await Folder.find({ responsable: req.user });
+    const folders = await Folder.find();
     res.json(folders);
   } catch (error) {
     res.status(400).json({ message: error.message });
