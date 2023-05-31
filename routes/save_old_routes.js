@@ -337,6 +337,86 @@ router.get("/autocreate/byname", async (req, res) => {
   }
 });
 
+// Affiliate list with filters =>> V1
+router.get("/affiliates-search/", isAuthentificated, async (req, res) => {
+  let skip = "";
+  if (req.query.skip) {
+    skip = req.query.skip;
+  }
+  let limit = "";
+  if (req.query.limit) {
+    limit = req.query.limit;
+  }
+
+  let filters = {};
+  if (req.query.name) {
+    filters.name = new RegExp(req.query.name, "i");
+  }
+  if (req.query.email) {
+    filters.email = new RegExp(req.query.email, "i");
+  }
+  if (req.query.contact) {
+    filters.contact = new RegExp(req.query.contact, "i");
+  }
+
+  const results = await Affiliate.find(filters)
+    .populate("responsable")
+    .populate("updatadBy")
+    .populate("contact_folder")
+    .skip(skip)
+    .limit(limit);
+
+  res.status(200).json([req.user, results]);
+});
+
+// Adding avatars to Affiliates route : note used for now
+router.post(
+  "/addimage/:id",
+  isAuthentificated,
+  fileUpload(),
+  async (req, res) => {
+    if (req.files.picture) {
+      try {
+        // search existing avatar from Affiliate
+        const affiliateToCheck = await Affiliate.findById(req.params.id);
+
+        if (affiliateToCheck.avatar) {
+          // on remonte l'ID public de l'avatar pour le supprimer
+          const avatartoDelete = affiliateToCheck.avatar.public_id;
+          // On supprime l'avatar de Cloudinary
+          const deleteResponse = await cloudinary.uploader.destroy(
+            avatartoDelete
+          );
+        }
+        // on remonte le nouvel avatar
+        const converted = convertToBase64(req.files.picture);
+        const result = await cloudinary.uploader.upload(converted, {
+          folder: "Annuaire",
+        });
+        const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
+          req.params.id,
+          {
+            avatar: result,
+            updatadBy: req.user,
+          },
+          { new: true }
+        );
+        if (affiliateToUpdate) {
+          return res.status(200).json({
+            message: "Affiliate updated !",
+            affiliate: affiliateToUpdate,
+          });
+        } else {
+          res.status(400).json({ message: "Affiliate not found" });
+        }
+      } catch (error) {
+        res.status(400).json("Image Upload >> Something is Wrong");
+      }
+    }
+  }
+);
+
+// ****** NEW ROUTES *******
 module.exports = router;
 
 //MODELS
