@@ -36,25 +36,39 @@ router.get("/folder/add-folder-key", isAuthentificated, async (req, res) => {
     // get all affiliates
     const affiliates = await Affiliate.find();
     // check for each affiliate if the folder key exist
-    affiliates.map(async (affiliate) => {
-      if (!affiliate.contact_folder) {
+
+    for (let i = 0; i < affiliates.length; i++) {
+      if (!affiliates[i].contact_folder) {
         console.log("no folder key");
         // if not, update the affiliate with the default folder key
-        const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
-          affiliate._id,
-          {
-            contact_folder: ObjectId(`647377874977d0f948b08d71`),
-          },
-          { new: true }
-        );
-        await affiliateToUpdate.save();
+
+        affiliates[i].contact_folder = `647377874977d0f948b08d71`;
+        await affiliates[i].save();
       }
-    });
+    }
     res.json(affiliates);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
+//     affiliates.map(async (affiliate) => {
+//       if (!affiliate.contact_folder) {
+//         console.log("no folder key");
+//         // if not, update the affiliate with the default folder key
+//         const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
+//           affiliate._id,
+//           {
+//             contact_folder: `647377874977d0f948b08d71`,
+//           },
+//           { new: true }
+//         );
+//       }
+//     });
+//     res.json(affiliates);
+//   } catch (error) {
+//     res.status(400).json({ message: error.message });
+//   }
+// });
 
 // Folders list route
 

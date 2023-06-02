@@ -55,21 +55,34 @@ router.get("/affiliates", isAuthentificated, async (req, res) => {
 
     // add filters by company_name, contact_email, contact_name, contact_heat, contact_status, contact_folder
     let filters = {};
+
+    // add an $or opertator with contact_name, company_name, contact_email filters
+
+    if (req.query.q) {
+      filters.$or = [];
+    }
+    if (req.query.q) {
+      filters.$or.push({
+        contact_name: new RegExp(req.query.q, "i"),
+      });
+      filters.$or.push({
+        company_name: new RegExp(req.query.q, "i"),
+      });
+      filters.$or.push({
+        contact_email: new RegExp(req.query.q, "i"),
+      });
+    }
+
+    // put others filters in the filters object
+
     if (req.query.current_user === "true") {
       filters.responsable = req.user._id;
     }
+
+    // create a .$and operator with the other filters
+
     if (req.query.responsable) {
       filters.responsable = req.query.responsable;
-    }
-
-    if (req.query.contact_name) {
-      filters.contact_name = new RegExp(req.query.contact_name, "i");
-    }
-    if (req.query.contact_email) {
-      filters.contact_email = new RegExp(req.query.contact_email, "i");
-    }
-    if (req.query.company_name) {
-      filters.company_name = new RegExp(req.query.company_name, "i");
     }
     if (req.query.contact_folder) {
       filters.contact_folder = req.query.contact_folder;
@@ -80,12 +93,10 @@ router.get("/affiliates", isAuthentificated, async (req, res) => {
     if (req.query.contact_heat) {
       filters.contact_heat = req.query.contact_heat;
     }
-    console.log(req.user._id);
+
     // find affiliates with filters
     const affiliates = await Affiliate.find(filters)
-      .populate("responsable")
-      .populate("updatadBy")
-      .populate("contact_folder")
+      .populate("responsable updatadBy contact_folder")
       .skip(skip)
       .limit(limit);
 
