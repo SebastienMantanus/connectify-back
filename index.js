@@ -19,6 +19,9 @@ app.use(affiliatesRoutes);
 const foldersRoutes = require("./routes/folders");
 app.use(foldersRoutes);
 
+const statusRoutes = require("./routes/status");
+app.use(statusRoutes);
+
 // routes principales
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Hi, welcome to Connectify Backend" });
