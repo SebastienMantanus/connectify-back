@@ -96,7 +96,7 @@ router.get("/affiliates", isAuthentificated, async (req, res) => {
 
     // find affiliates with filters
     const affiliates = await Affiliate.find(filters)
-      .populate("responsable updatadBy contact_folder")
+      .populate("responsable updatadBy contact_folder contact_status")
       .skip(skip)
       .limit(limit);
 
