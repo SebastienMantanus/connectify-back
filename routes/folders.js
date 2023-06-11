@@ -7,7 +7,6 @@ const cors = require("cors");
 router.use(cors());
 
 // import models
-// const User = require("../models/User.js");
 const Folder = require("../models/Folder.js");
 const Affiliate = require("../models/Affiliate.js");
 
@@ -51,24 +50,6 @@ router.get("/folder/add-folder-key", isAuthentificated, async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
-//     affiliates.map(async (affiliate) => {
-//       if (!affiliate.contact_folder) {
-//         console.log("no folder key");
-//         // if not, update the affiliate with the default folder key
-//         const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
-//           affiliate._id,
-//           {
-//             contact_folder: `647377874977d0f948b08d71`,
-//           },
-//           { new: true }
-//         );
-//       }
-//     });
-//     res.json(affiliates);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// });
 
 // Folders list route
 
