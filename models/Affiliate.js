@@ -22,7 +22,7 @@ const shema = mongoose.Schema(
     contact_name: { type: String, required: true },
     contact_role: { type: String, default: "Non renseigné" },
     contact_email: { type: String, required: true },
-    contact_phone: { type: Number, default: 0 },
+    contact_phone: { type: String, default: "Non renseigné" },
 
     contact_heat: { type: Number, default: 0 },
     contact_status: {
