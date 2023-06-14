@@ -97,7 +97,8 @@ router.get("/affiliates", isAuthentificated, async (req, res) => {
     const affiliates = await Affiliate.find(filters)
       .populate("responsable updatadBy contact_folder contact_status")
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .sort({ created_at: -1 });
 
     res.status(200).json(affiliates);
   } catch (error) {
@@ -172,7 +173,10 @@ router.get("/affiliate/create/autocomplete", async (req, res) => {
 
       if (response.data.resultats_denomination.length > 0) {
         for (let i = 0; i < response.data.resultats_denomination.length; i++) {
-          if (response.data.resultats_denomination[i].date_cessation === null) {
+          if (
+            response.data.resultats_denomination[i].date_cessation === null &&
+            response.data.resultats_denomination[i].statut_rcs !== "non inscrit"
+          ) {
             autocomplete_arr.push({
               company_name:
                 response.data.resultats_denomination[i].denomination,
