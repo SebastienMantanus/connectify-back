@@ -124,7 +124,7 @@ router.get("/folder/:id", isAuthentificated, async (req, res) => {
   try {
     const result = {};
     // find the folder
-    let folder = await Folder.findById(req.params.id);
+    let folder = await Folder.findById(req.params.id).populate("responsable");
     if (folder) {
       // find all affiliates in the folder
       const affiliates = await Affiliate.find({
