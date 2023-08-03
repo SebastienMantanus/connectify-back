@@ -25,6 +25,9 @@ app.use(statusRoutes);
 const notesRoutes = require("./routes/notes");
 app.use(notesRoutes);
 
+const authorisationsRoutes = require("./routes/authorisations");
+app.use(authorisationsRoutes);
+
 // routes principales
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Hi, welcome to Connectify Backend" });
