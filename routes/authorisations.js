@@ -46,46 +46,21 @@ router.get("/authorisation/:id", isAuthentificated, async (req, res) => {
 });
 
 // Update an authorisation
-router.post(
-  "/authorisation/update/:id",
-  isAuthentificated,
-  async (req, res) => {
-    try {
-      const authorisation = await Authorisation.findById(req.params.id);
-      if (req.body.authorisation_name) {
-        authorisation.authorisation_name = req.body.authorisation_name;
-      }
-      await authorisation.save();
-      res.json(authorisation);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
+router.patch("/authorisation/:id", isAuthentificated, async (req, res) => {
+  try {
+    const authorisation = await Authorisation.findById(req.params.id);
+    if (req.body.authorisation_name) {
+      authorisation.authorisation_name = req.body.authorisation_name;
     }
+    await authorisation.save();
+    res.json(authorisation);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
-);
-
-// Delete an authorisation
-router.delete(
-  "/authorisation/delete/:id",
-  isAuthentificated,
-  async (req, res) => {
-    //check if authorisation is empty of users
-    await Authorisation.findById(req.params.id).then((authorisation) => {
-        if (authorisation.granted_users.length > 0) {
-            res.json({
-                message: "Authorisation not empty",
-            });
-        } else {
-    try {
-      await Authorisation.findByIdAndDelete(req.params.id);
-      res.json({ message: "Authorisation deleted" });
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  }}
-);
+});
 
 // Add an user to an authorisation
-router.post(
+router.patch(
   "/authorisation/add-user/:id",
   isAuthentificated,
   async (req, res) => {
@@ -108,7 +83,7 @@ router.post(
 );
 
 // Remove an user from an authorisation
-router.post(
+router.patch(
   "/authorisation/remove-user/:id",
   isAuthentificated,
   async (req, res) => {
@@ -117,8 +92,11 @@ router.post(
 
       // check if user is already in the authorisation
       if (authorisation.granted_users.includes(req.body.user_id)) {
+        // remove user from the array
         authorisation.granted_users = authorisation.granted_users.filter(
-          (user) => user !== req.body.user_id
+          (user) => {
+            return user != req.body.user_id;
+          }
         );
         await authorisation.save();
         res.json(authorisation);
@@ -138,6 +116,7 @@ router.get("/authorisations/user/:id", isAuthentificated, async (req, res) => {
     const authorisations = await Authorisation.find();
 
     // get user
+
     const user = await User.findById(req.params.id);
 
     // create an array with all authorisations for the user
@@ -149,7 +128,7 @@ router.get("/authorisations/user/:id", isAuthentificated, async (req, res) => {
         userAuthorisations.push(authorisations[i]);
       }
     }
-
+    // send the array with user populated
     res.json(userAuthorisations);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -157,13 +136,14 @@ router.get("/authorisations/user/:id", isAuthentificated, async (req, res) => {
 });
 
 // Check if an specific User have an authorisation
-router.get("/authorisation/user/:id", isAuthentificated, async (req, res) => {
+router.post("/authorisation/user/:id", isAuthentificated, async (req, res) => {
+  console.log(req.body.user_id);
   try {
     // get authorisation
     const authorisation = await Authorisation.findById(req.params.id);
 
     // check if user is in the authorisation
-    if (authorisation.granted_users.includes(req.user._id)) {
+    if (authorisation.granted_users.includes(req.body.user_id)) {
       res.json({ message: "User is in authorisation", granted: true });
     } else {
       res.json({ message: "User is not in authorisation", granted: false });
