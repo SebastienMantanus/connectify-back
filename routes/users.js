@@ -8,6 +8,10 @@ const router = express.Router();
 router.use(cors());
 
 const User = require("../models/User");
+const Affiliate = require("../models/Affiliate");
+const Authorisation = require("../models/Authorisation");
+
+const isAuthentificated = require("../middlewares/isAuthentificated");
 
 // *** USER ROUTES ***
 
@@ -64,7 +68,84 @@ router.post("/users/login", async (req, res) => {
   }
 });
 
-router.get("/users/send/", async (req, res) => {
-  console.log("coucou");
+// *** USERS ROUTE FOR BACKOFFICE ***
+
+// Read all users with authorisations and affiliates
+
+router.get("/users/all", isAuthentificated, async (req, res) => {
+  // create an array of users
+  const users = await User.find();
+  let usersArray = [];
+
+  // loop through users
+  for (let i = 0; i < users.length; i++) {
+    // get authorisations
+    const authorisations = await Authorisation.find();
+    //loop through authorisations
+    const userAuthorisations = [];
+    for (let j = 0; j < authorisations.length; j++) {
+      if (authorisations[j].granted_users.includes(users[i]._id)) {
+        userAuthorisations.push(authorisations[j]);
+      }
+    }
+
+    // get affiliates
+    const affiliates = await Affiliate.find().populate("responsable");
+    //loop through affiliates
+    const userAffiliates = [];
+    for (let k = 0; k < affiliates.length; k++) {
+      affiliates[k].responsable.name === users[i].name &&
+        userAffiliates.push(affiliates[k]);
+    }
+
+    usersArray.push({
+      id: users[i]._id,
+      name: users[i].name,
+      email: users[i].email,
+      authorisations: userAuthorisations,
+      nbAffiliates: userAffiliates.length,
+      affiliates: userAffiliates,
+    });
+  }
+
+  res.json(usersArray);
 });
+
+// Read a specific user with authorisations and affiliates
+
+router.get("/user/complete/:id", isAuthentificated, async (req, res) => {
+  // get user
+  const user = await User.findById(req.params.id);
+
+  // get authorisations
+  const authorisations = await Authorisation.find();
+  //loop through authorisations
+  const userAuthorisations = [];
+  for (let j = 0; j < authorisations.length; j++) {
+    if (authorisations[j].granted_users.includes(user._id)) {
+      userAuthorisations.push(authorisations[j]);
+    }
+  }
+
+  // get affiliates
+  const affiliates = await Affiliate.find().populate("responsable");
+  //loop through affiliates
+  const userAffiliates = [];
+  for (let k = 0; k < affiliates.length; k++) {
+    affiliates[k].responsable.name === user.name &&
+      userAffiliates.push(affiliates[k]);
+  }
+
+  const userComplete = {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    authorisations: userAuthorisations,
+    nbAffiliates: userAffiliates.length,
+    affiliates: userAffiliates,
+  };
+
+  res.json(userComplete);
+});
+
 module.exports = router;

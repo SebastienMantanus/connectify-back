@@ -153,4 +153,23 @@ router.post("/authorisation/user/:id", isAuthentificated, async (req, res) => {
   }
 });
 
+// maintenance route to put the users without authorisation in the authorisation 64cb508418c4da2bb4f818d3 (user)
+router.get("/putauthorisation", isAuthentificated, async (req, res) => {
+  try {
+    const authorisation = await Authorisation.findById(
+      "64cb508418c4da2bb4f818d3"
+    );
+    const users = await User.find();
+    for (let i = 0; i < users.length; i++) {
+      if (!authorisation.granted_users.includes(users[i]._id)) {
+        authorisation.granted_users.push(users[i]._id);
+      }
+    }
+    await authorisation.save();
+    res.json(authorisation);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 module.exports = router;
