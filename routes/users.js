@@ -181,4 +181,31 @@ router.patch("/user/update", isAuthentificated, async (req, res) => {
   res.json(user);
 });
 
+// delete user
+router.delete("/user/delete", isAuthentificated, async (req, res) => {
+  // remove user from authorisations
+  const authorisations = await Authorisation.find();
+  for (let i = 0; i < authorisations.length; i++) {
+    if (authorisations[i].granted_users.includes(req.body.user_id)) {
+      const index = authorisations[i].granted_users.indexOf(req.body.user_id);
+      authorisations[i].granted_users.splice(index, 1);
+      await authorisations[i].save();
+    }
+  }
+  // check if user is responsable of an affiliate
+  const affiliates = await Affiliate.find();
+  for (let j = 0; j < affiliates.length; j++) {
+    if (affiliates[j].responsable.toString() === req.body.user_id) {
+      return res.status(201).json({
+        message:
+          "You can't delete this user because he is responsable of an affiliate",
+      });
+    }
+  }
+
+  // delete user
+  const user = await User.findByIdAndDelete(req.body.user_id);
+  res.json("user deleted");
+});
+
 module.exports = router;
