@@ -68,7 +68,7 @@ router.post("/users/login", async (req, res) => {
   }
 });
 
-// *** USERS ROUTE FOR BACKOFFICE ***
+// ************ USERS ROUTE FOR BACKOFFICE ************
 
 // Read all users with authorisations and affiliates
 
@@ -146,6 +146,39 @@ router.get("/user/complete/:id", isAuthentificated, async (req, res) => {
   };
 
   res.json(userComplete);
+});
+
+// chage user password
+router.patch("/user/change-password", isAuthentificated, async (req, res) => {
+  const password = req.body.password;
+  const salt = uid2(16);
+  const hash = SHA256(password + salt).toString(encBase64);
+  const token = uid2(16);
+  // update user
+  const user = await User.findByIdAndUpdate(
+    req.body.user_id,
+    {
+      salt: salt,
+      hash: hash,
+      token: token,
+    },
+    { new: true }
+  );
+  res.json(user);
+});
+
+// udate user
+router.patch("/user/update", isAuthentificated, async (req, res) => {
+  // update user
+  const user = await User.findByIdAndUpdate(
+    req.body.user_id,
+    {
+      name: req.body.name,
+      email: req.body.email,
+    },
+    { new: true }
+  );
+  res.json(user);
 });
 
 module.exports = router;
