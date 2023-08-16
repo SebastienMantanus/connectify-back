@@ -2,9 +2,11 @@ require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 const isAuthentificated = require("../middlewares/isAuthentificated.js");
-const router = express.Router();
-const cors = require("cors");
-router.use(cors());
+// const router = express.Router();
+const app = express();
+app.use(express.json());
+// const cors = require("cors");
+// router.use(cors());
 
 // Cloudinary
 const fileUpload = require("express-fileupload");
@@ -26,7 +28,7 @@ const User = require("../models/User");
 // ********* MAIN ROUTES FOR AFFILIATES *********
 
 // Affiliate detail by ID
-router.get("/affiliate/:id", isAuthentificated, async (req, res) => {
+app.get("/affiliate/:id", isAuthentificated, async (req, res) => {
   try {
     const affiliateSearch = await Affiliate.findById(req.params.id).populate(
       "responsable updatadBy contact_status contact_folder"
@@ -40,7 +42,7 @@ router.get("/affiliate/:id", isAuthentificated, async (req, res) => {
 
 // Affiliates list filtered by filters
 
-router.get("/affiliates", isAuthentificated, async (req, res) => {
+app.get("/affiliates", isAuthentificated, async (req, res) => {
   try {
     // skip and limit
     let skip = "";
@@ -107,7 +109,7 @@ router.get("/affiliates", isAuthentificated, async (req, res) => {
 });
 
 // change responsable (user) of affiliate
-router.patch(
+app.patch(
   "/affiliates/:id/change-responsable",
   isAuthentificated,
   async (req, res) => {
@@ -127,7 +129,7 @@ router.patch(
 );
 
 // Delete Affiliate route
-router.delete("/affiliate/delete/:id", isAuthentificated, async (req, res) => {
+app.delete("/affiliate/delete/:id", isAuthentificated, async (req, res) => {
   try {
     await Affiliate.findByIdAndDelete(req.params.id);
     res.json({ message: "Affiliate deleted" });
@@ -137,8 +139,7 @@ router.delete("/affiliate/delete/:id", isAuthentificated, async (req, res) => {
 });
 
 // Affiliate update route  V2
-router.patch("/affiliate/:id", isAuthentificated, async (req, res) => {
-  console.log(req.body);
+app.patch("/affiliate/:id", isAuthentificated, async (req, res) => {
   try {
     const affiliateToUpdate = await Affiliate.findByIdAndUpdate(
       req.params.id,
@@ -162,21 +163,25 @@ router.patch("/affiliate/:id", isAuthentificated, async (req, res) => {
 
 // Affiliate creation step 1 : Autocomplete company
 
-router.get("/affiliate/create/autocomplete", async (req, res) => {
+app.get("/affiliate/create/autocomplete", async (req, res) => {
   if (req.query.q) {
     try {
+      // destructuring body {data}
       const response = await axios.get(
         `https://suggestions.pappers.fr/v2?q=${req.query.q}&longueur=20&cibles=denomination`
       );
 
       const autocomplete_arr = [];
 
+      // change >> data.resultats_denomination.length
       if (response.data.resultats_denomination.length > 0) {
         for (let i = 0; i < response.data.resultats_denomination.length; i++) {
           if (
             response.data.resultats_denomination[i].date_cessation === null &&
             response.data.resultats_denomination[i].statut_rcs !== "non inscrit"
           ) {
+            // const { denomination, forme_juridique, siege, effectif_min, effectif_max, capital, domaine_activite, date_creation_formate, siren } = data.resultats_denomination[i];
+
             autocomplete_arr.push({
               company_name:
                 response.data.resultats_denomination[i].denomination,
@@ -213,14 +218,47 @@ router.get("/affiliate/create/autocomplete", async (req, res) => {
 
 // Affiliate creation step 2 : form validation and creation
 
-router.post(
-  "/affiliate/create/savetodb",
-  isAuthentificated,
-  async (req, res) => {
-    console.log("welcome to the creation route");
+app.post("/affiliate/create/savetodb", isAuthentificated, async (req, res) => {
+  console.log("welcome to the creation route");
 
-    // step 1 : destructuring body
-    const {
+  // step 1 : destructuring body
+  const {
+    contact_name,
+    contact_role,
+    contact_email,
+    contact_phone,
+    company_name,
+    company_legalform,
+    company_address,
+    company_zip,
+    company_city,
+    company_size_min,
+    company_size_max,
+    company_capital,
+    company_activity,
+    company_founded,
+    company_registration_number,
+    company_website,
+  } = req.body;
+
+  // step 2 : search favicon and upload to cloudinary
+
+  let company_favicon = {};
+  try {
+    const favicon_url = `https://icon.horse/icon/${company_website}`;
+    const result = await cloudinary.uploader.upload(favicon_url, {
+      folder: "Connectify_V2",
+    });
+
+    company_favicon = { id: result.public_id, url: result.secure_url };
+  } catch (error) {
+    console.log("Cloudinary error : ", error.message);
+  }
+
+  // step 3 : create contact in database
+
+  try {
+    const newAffiliate = new Affiliate({
       contact_name,
       contact_role,
       contact_email,
@@ -237,52 +275,15 @@ router.post(
       company_founded,
       company_registration_number,
       company_website,
-    } = req.body;
+      company_favicon,
+      responsable: req.user,
+    });
 
-    // step 2 : search favicon and upload to cloudinary
-
-    let company_favicon = {};
-    try {
-      const favicon_url = `https://icon.horse/icon/${company_website}`;
-      const result = await cloudinary.uploader.upload(favicon_url, {
-        folder: "Connectify_V2",
-      });
-
-      company_favicon = { id: result.public_id, url: result.secure_url };
-    } catch (error) {
-      console.log("Cloudinary error : ", error.message);
-    }
-
-    // step 3 : create contact in database
-
-    try {
-      const newAffiliate = new Affiliate({
-        contact_name,
-        contact_role,
-        contact_email,
-        contact_phone,
-        company_name,
-        company_legalform,
-        company_address,
-        company_zip,
-        company_city,
-        company_size_min,
-        company_size_max,
-        company_capital,
-        company_activity,
-        company_founded,
-        company_registration_number,
-        company_website,
-        company_favicon,
-        responsable: req.user,
-      });
-
-      await newAffiliate.save();
-      res.status(200).json(newAffiliate);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
+    await newAffiliate.save();
+    res.status(200).json(newAffiliate);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
-);
+});
 
-module.exports = router;
+module.exports = app;
