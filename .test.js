@@ -35,6 +35,11 @@ test("Pappers API test", async () => {
       "company_registration_number",
       //   "Gwen_est_géniale",
     ]);
+    // faire une boucle pour tester tous les objets du tableau et vérifier qu'il ne soient pas undifined
+    const tabOfKeys = Object.keys(GetAffiliatesResponse.body[0]);
+    for (let i = 0; i < tabOfKeys.length; i++) {
+      expect(GetAffiliatesResponse.body[0][tabOfKeys[i]]).not.toBeUndefined();
+    }
   }
 });
 
