@@ -13,11 +13,11 @@ const isAuthentificated = async (req, res, next) => {
         next();
       } else {
         console.log("Route interdite faute d'authentification");
-        res.status(200).json({ status: "denied" });
+        res.status(401).json({ status: "denied" });
       }
     } else {
       console.log("Route interdite faute d'authentification");
-      res.status(200).json({ status: "denied" });
+      res.status(401).json({ status: "denied" });
     }
   } catch (error) {
     res.status(400).json("athentification error: ", error.message);
