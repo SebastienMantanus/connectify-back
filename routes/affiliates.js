@@ -176,30 +176,39 @@ app.get("/affiliate/create/autocomplete", async (req, res) => {
             response.data.resultats_denomination[i].date_cessation === null &&
             response.data.resultats_denomination[i].statut_rcs !== "non inscrit"
           ) {
-            const {
-              denomination,
-              forme_juridique,
-              siege,
-              effectif_min,
-              effectif_max,
-              capital,
-              domaine_activite,
-              date_creation_formate,
-              siren,
-            } = data.resultats_denomination[i];
+            // const {
+            //   denomination,
+            //   forme_juridique,
+            //   siege,
+            //   effectif_min,
+            //   effectif_max,
+            //   capital,
+            //   domaine_activite,
+            //   date_creation_formate,
+            //   siren,
+            // } = data.resultats_denomination[i];
 
             autocomplete_arr.push({
-              company_name: denomination,
-              company_legalform: forme_juridique,
-              company_address: siege.adresse_ligne_1,
-              company_zip: siege.code_postal,
-              company_city: siege.ville,
-              company_size_min: effectif_min,
-              company_size_max: effectif_max,
-              company_capital: capital,
-              company_activity: domaine_activite,
-              company_founded: date_creation_formate,
-              company_registration_number: siren,
+              company_name:
+                response.data.resultats_denomination[i].denomination,
+              company_legalform:
+                response.data.resultats_denomination[i].forme_juridique,
+              company_address:
+                response.data.resultats_denomination[i].siege.adresse_ligne_1,
+              company_zip:
+                response.data.resultats_denomination[i].siege.code_postal,
+              company_city: response.data.resultats_denomination[i].siege.ville,
+              company_size_min:
+                response.data.resultats_denomination[i].effectif_min,
+              company_size_max:
+                response.data.resultats_denomination[i].effectif_max,
+              company_capital: response.data.resultats_denomination[i].capital,
+              company_activity:
+                response.data.resultats_denomination[i].domaine_activite,
+              company_founded:
+                response.data.resultats_denomination[i].date_creation_formate,
+              company_registration_number:
+                response.data.resultats_denomination[i].siren,
             });
           }
         }
