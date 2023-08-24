@@ -172,20 +172,22 @@ app.get("/affiliate/create/autocomplete", async (req, res) => {
       // change >> data.resultats_denomination.length
       if (response.data.resultats_denomination.length > 0) {
         for (let i = 0; i < response.data.resultats_denomination.length; i++) {
-          const {
-            denomination,
-            forme_juridique,
-            siege,
-            effectif_min,
-            effectif_max,
-            capital,
-            domaine_activite,
-            date_creation_formate,
-            siren,
-            date_cessation,
-            statut_rcs,
-          } = data.resultats_denomination[i];
-          if (date_cessation === null && statut_rcs !== "non inscrit") {
+          if (
+            response.data.resultats_denomination[i].date_cessation === null &&
+            response.data.resultats_denomination[i].statut_rcs !== "non inscrit"
+          ) {
+            const {
+              denomination,
+              forme_juridique,
+              siege,
+              effectif_min,
+              effectif_max,
+              capital,
+              domaine_activite,
+              date_creation_formate,
+              siren,
+            } = data.resultats_denomination[i];
+
             autocomplete_arr.push({
               company_name: denomination,
               company_legalform: forme_juridique,
