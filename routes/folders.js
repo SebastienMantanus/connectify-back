@@ -108,7 +108,15 @@ router.delete("/folder/:id", isAuthentificated, async (req, res) => {
       const folderToDelete = await Folder.findById(req.params.id);
       if (folderToDelete) {
         await Folder.findByIdAndDelete(req.params.id);
-        res.json({ message: "Folder deleted" });
+        // res.json({ message: "Folder deleted" });
+
+        // reload folders list
+        try {
+          const folders = await Folder.find();
+          res.json(folders);
+        } catch (error) {
+          res.status(400).json({ message: error.message });
+        }
       } else {
         res.status(400).json({ message: "Folder not found" });
       }
