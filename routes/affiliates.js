@@ -2,14 +2,10 @@ require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 const isAuthentificated = require("../middlewares/isAuthentificated.js");
-// const router = express.Router();
 const app = express();
 app.use(express.json());
-// const cors = require("cors");
-// router.use(cors());
 
 // Cloudinary
-const fileUpload = require("express-fileupload");
 const cloudinary = require("cloudinary").v2;
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -17,9 +13,9 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const convertToBase64 = (file) => {
-  return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
-};
+// const convertToBase64 = (file) => {
+//   return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
+// };
 
 //import des modèles
 const Affiliate = require("../models/Affiliate");
@@ -176,33 +172,32 @@ app.get("/affiliate/create/autocomplete", async (req, res) => {
       // change >> data.resultats_denomination.length
       if (response.data.resultats_denomination.length > 0) {
         for (let i = 0; i < response.data.resultats_denomination.length; i++) {
-          if (
-            response.data.resultats_denomination[i].date_cessation === null &&
-            response.data.resultats_denomination[i].statut_rcs !== "non inscrit"
-          ) {
-            // const { denomination, forme_juridique, siege, effectif_min, effectif_max, capital, domaine_activite, date_creation_formate, siren } = data.resultats_denomination[i];
-
+          const {
+            denomination,
+            forme_juridique,
+            siege,
+            effectif_min,
+            effectif_max,
+            capital,
+            domaine_activite,
+            date_creation_formate,
+            siren,
+            date_cessation,
+            statut_rcs,
+          } = data.resultats_denomination[i];
+          if (date_cessation === null && statut_rcs !== "non inscrit") {
             autocomplete_arr.push({
-              company_name:
-                response.data.resultats_denomination[i].denomination,
-              company_legalform:
-                response.data.resultats_denomination[i].forme_juridique,
-              company_address:
-                response.data.resultats_denomination[i].siege.adresse_ligne_1,
-              company_zip:
-                response.data.resultats_denomination[i].siege.code_postal,
-              company_city: response.data.resultats_denomination[i].siege.ville,
-              company_size_min:
-                response.data.resultats_denomination[i].effectif_min,
-              company_size_max:
-                response.data.resultats_denomination[i].effectif_max,
-              company_capital: response.data.resultats_denomination[i].capital,
-              company_activity:
-                response.data.resultats_denomination[i].domaine_activite,
-              company_founded:
-                response.data.resultats_denomination[i].date_creation_formate,
-              company_registration_number:
-                response.data.resultats_denomination[i].siren,
+              company_name: denomination,
+              company_legalform: forme_juridique,
+              company_address: siege.adresse_ligne_1,
+              company_zip: siege.code_postal,
+              company_city: siege.ville,
+              company_size_min: effectif_min,
+              company_size_max: effectif_max,
+              company_capital: capital,
+              company_activity: domaine_activite,
+              company_founded: date_creation_formate,
+              company_registration_number: siren,
             });
           }
         }
