@@ -1,14 +1,12 @@
 const User = require("../models/User");
 
 const isAuthentificated = async (req, res, next) => {
-  console.log("hello isAuthentificated !");
   try {
     if (req.headers.authorization) {
       const user = await User.findOne({
         token: req.headers.authorization.replace("Bearer ", ""),
       });
       if (user) {
-        console.log("connexion autorisée !");
         req.user = user;
         next();
       } else {

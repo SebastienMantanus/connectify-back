@@ -21,7 +21,12 @@ router.post("/note/create", isAuthentificated, async (req, res) => {
       responsable: req.user,
     });
     await newNote.save();
-    res.json(newNote);
+    // get all notes from affiliate
+    const newNotesArray = await Note.find({
+      affiliate: req.body.affiliate,
+    }).sort({ created_at: -1 });
+
+    res.json(newNotesArray);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -54,8 +59,17 @@ router.patch("/note/:id", isAuthentificated, async (req, res) => {
 
 router.delete("/note/delete/:id", isAuthentificated, async (req, res) => {
   try {
+    // grab the affiliate id
+    const response = await Note.findById(req.params.id);
+    const affiliateId = response.affiliate.toString();
+    // delete the note
     await Note.findByIdAndDelete(req.params.id);
-    res.json({ message: "Note deleted" });
+    // get all notes from affiliate
+    const newNotesArray = await Note.find({
+      affiliate: affiliateId,
+    }).sort({ created_at: -1 });
+    console.log(newNotesArray);
+    res.json(newNotesArray);
   } catch (error) {
     res.status(400).json("Note delete >> Something is Wrong");
   }

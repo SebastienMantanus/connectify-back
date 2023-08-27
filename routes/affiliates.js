@@ -29,7 +29,7 @@ app.get("/affiliate/:id", isAuthentificated, async (req, res) => {
     const affiliateSearch = await Affiliate.findById(req.params.id).populate(
       "responsable updatadBy contact_status contact_folder"
     );
-    console.log(affiliateSearch);
+    // console.log(affiliateSearch);
     res.status(200).json(affiliateSearch);
   } catch (error) {
     res.status(400).json("affiliate error");
