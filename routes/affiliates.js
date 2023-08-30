@@ -126,6 +126,20 @@ app.patch(
 
 // Delete Affiliate route
 app.delete("/affiliate/delete/:id", isAuthentificated, async (req, res) => {
+  //delete favicon from cloudinary
+  try {
+    const affiliateToDelete = await Affiliate.findById(req.params.id);
+    if (affiliateToDelete.company_favicon.id) {
+      try {
+        await cloudinary.uploader.destroy(affiliateToDelete.company_favicon.id);
+      } catch (error) {
+        console.log("Cloudinary delete error : ", error.message);
+      }
+    }
+  } catch (error) {
+    console.log(error.message);
+  }
+
   try {
     await Affiliate.findByIdAndDelete(req.params.id);
     res.json({ message: "Affiliate deleted" });
